@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Alerts - TMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Alerts</h2>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{% url 'alert_list' %}" class="row g-3">
+            <div class="col-md-3">
+                <label for="severity" class="form-label">Severity</label>
+                <select class="form-select" id="severity" name="severity">
+                    <option value="">All</option>
+                    <option value="CRITICAL" {% if request.GET.severity == 'CRITICAL' %}selected{% endif %}>Critical</option>
+                    <option value="HIGH" {% if request.GET.severity == 'HIGH' %}selected{% endif %}>High</option>
+                    <option value="MEDIUM" {% if request.GET.severity == 'MEDIUM' %}selected{% endif %}>Medium</option>
+                    <option value="LOW" {% if request.GET.severity == 'LOW' %}selected{% endif %}>Low</option>
+                    <option value="INFO" {% if request.GET.severity == 'INFO' %}selected{% endif %}>Info</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All</option>
+                    <option value="unresolved" {% if request.GET.status == 'unresolved' %}selected{% endif %}>Unresolved</option>
+                    <option value="acknowledged" {% if request.GET.status == 'acknowledged' %}selected{% endif %}>Acknowledged</option>
+                    <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="terminal" class="form-label">Terminal</label>
+                <input type="text" class="form-control" id="terminal" name="terminal"
+                       value="{{ request.GET.terminal }}" placeholder="Serial Number">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filter</button>
+                <a href="{% url 'alert_list' %}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }} total
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Terminal</th>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in page_obj %}
+                <tr>
+                    <td>
+                        <span class="badge bg-{% if alert.severity == 'CRITICAL' %}danger{% elif alert.severity == 'HIGH' %}warning{% elif alert.severity == 'MEDIUM' %}info{% else %}secondary{% endif %}">
+                            {{ alert.severity }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'terminal_detail' alert.terminal.id %}">
+                            {{ alert.terminal.serial_number }}
+                        </a>
+                    </td>
+                    <td>{{ alert.title }}</td>
+                    <td>{{ alert.message|truncatewords:10 }}</td>
+                    <td>{{ alert.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if alert.is_resolved %}
+                            <span class="badge bg-success">Resolved</span>
+                        {% elif alert.is_acknowledged %}
+                            <span class="badge bg-info">Acknowledged</span>
+                        {% else %}
+                            <span class="badge bg-danger">New</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            {% if not alert.is_acknowledged %}
+                            <button class="btn btn-outline-primary" onclick="acknowledgeAlert({{ alert.id }})">
+                                Acknowledge
+                            </button>
+                            {% endif %}
+                            {% if not alert.is_resolved %}
+                            <button class="btn btn-outline-success" onclick="resolveAlert({{ alert.id }})">
+                                Resolve
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No alerts found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.severity %}&severity={{ request.GET.severity }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                &lt; Prev
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.severity %}&severity={{ request.GET.severity }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.severity %}&severity={{ request.GET.severity }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                Next &gt;
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function acknowledgeAlert(alertId) {
+    fetch(`/api/v1/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            is_acknowledged: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        location.reload();
+    })
+    .catch(error => {
+        alert('Failed to acknowledge alert: ' + error);
+    });
+}
+
+function resolveAlert(alertId) {
+    fetch(`/api/v1/alerts/${alertId}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            is_resolved: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        location.reload();
+    })
+    .catch(error => {
+        alert('Failed to resolve alert: ' + error);
+    });
+}
+</script>
+{% endblock %}

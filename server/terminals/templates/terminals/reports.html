@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports - TMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Reports</h2>
+    <button class="btn btn-primary" onclick="exportReport()">
+        <i class="bi bi-download"></i> Export CSV
+    </button>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Summary Statistics</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h3 class="text-primary">{{ summary.total_terminals }}</h3>
+                        <p class="text-muted mb-0">Total Terminals</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-success">{{ summary.online_terminals }}</h3>
+                        <p class="text-muted mb-0">Online</p>
+                        <small class="text-success">{{ summary.online_percentage }}%</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-warning">{{ summary.total_alerts }}</h3>
+                        <p class="text-muted mb-0">Total Alerts</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3 class="text-info">{{ summary.total_customers }}</h3>
+                        <p class="text-muted mb-0">Customers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Availability by Customer</div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th class="text-end">Terminals</th>
+                            <th class="text-end">Uptime</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in availability_by_customer %}
+                        <tr>
+                            <td>{{ item.customer_name }}</td>
+                            <td class="text-end">{{ item.terminal_count }}</td>
+                            <td class="text-end">
+                                <span class="badge bg-{% if item.availability >= 99 %}success{% elif item.availability >= 95 %}warning{% else %}danger{% endif %}">
+                                    {{ item.availability }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Alert Distribution</div>
+            <div class="card-body">
+                <canvas id="alertChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Firmware Version Distribution</div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Firmware Version</th>
+                            <th class="text-end">Terminal Count</th>
+                            <th class="text-end">Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in firmware_distribution %}
+                        <tr>
+                            <td>{{ item.version }}</td>
+                            <td class="text-end">{{ item.count }}</td>
+                            <td class="text-end">{{ item.percentage }}%</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No data available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('alertChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ alert_labels|safe }},
+        datasets: [{
+            data: {{ alert_data|safe }},
+            backgroundColor: [
+                'rgba(220, 53, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(23, 162, 184, 0.8)',
+                'rgba(108, 117, 125, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+function exportReport() {
+    window.location.href = '/reports/export?format=csv';
+}
+</script>
+{% endblock %}

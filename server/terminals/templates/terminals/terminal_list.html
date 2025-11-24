@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Terminal List - TMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Terminal List</h2>
+    {% if perms.terminals.add_terminal %}
+    <a href="{% url 'terminal_new' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> New Registration
+    </a>
+    {% endif %}
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{% url 'terminal_list' %}" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search"
+                       value="{{ request.GET.search }}" placeholder="Serial No./Store Name">
+            </div>
+            <div class="col-md-3">
+                <label for="customer_id" class="form-label">Customer</label>
+                <select class="form-select" id="customer_id" name="customer_id">
+                    <option value="">All</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}"
+                            {% if request.GET.customer_id == customer.id|stringformat:"s" %}selected{% endif %}>
+                        {{ customer.company_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All</option>
+                    <option value="online" {% if request.GET.status == 'online' %}selected{% endif %}>
+                        Online
+                    </option>
+                    <option value="offline" {% if request.GET.status == 'offline' %}selected{% endif %}>
+                        Offline
+                    </option>
+                    <option value="error" {% if request.GET.status == 'error' %}selected{% endif %}>
+                        Error
+                    </option>
+                    <option value="maintenance" {% if request.GET.status == 'maintenance' %}selected{% endif %}>
+                        Maintenance
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Search</button>
+                <a href="{% url 'terminal_list' %}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }} total
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th width="30">
+                        <input type="checkbox" id="select-all" class="form-check-input">
+                    </th>
+                    <th>Serial Number</th>
+                    <th>Customer</th>
+                    <th>Store Name</th>
+                    <th>Status</th>
+                    <th>Last Communication</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for terminal in page_obj %}
+                <tr>
+                    <td>
+                        <input type="checkbox" class="form-check-input terminal-checkbox"
+                               value="{{ terminal.id }}">
+                    </td>
+                    <td>
+                        <a href="{% url 'terminal_detail' terminal.id %}">
+                            {{ terminal.serial_number }}
+                        </a>
+                    </td>
+                    <td>{{ terminal.customer.company_name }}</td>
+                    <td>{{ terminal.store_name }}</td>
+                    <td>
+                        {% if terminal.status == 'online' %}
+                            <span class="badge bg-success">Online</span>
+                        {% elif terminal.status == 'offline' %}
+                            <span class="badge bg-warning">Offline</span>
+                        {% elif terminal.status == 'error' %}
+                            <span class="badge bg-danger">Error</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ terminal.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if terminal.last_heartbeat %}
+                            {{ terminal.last_heartbeat|timesince }} ago
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{% url 'terminal_detail' terminal.id %}" class="btn btn-outline-primary">
+                                Details
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No terminals found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.customer_id %}&customer_id={{ request.GET.customer_id }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                &lt; Prev
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.customer_id %}&customer_id={{ request.GET.customer_id }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.customer_id %}&customer_id={{ request.GET.customer_id }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">
+                Next &gt;
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('select-all').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.terminal-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+});
+</script>
+{% endblock %}
