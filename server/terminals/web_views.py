@@ -186,7 +186,7 @@ def alert_list_view(request):
 @login_required
 def customer_list_view(request):
     customers = Customer.objects.annotate(
-        terminal_count=Count('terminal')
+        terminal_count=Count('terminals')
     ).all()
     
     paginator = Paginator(customers, 20)
@@ -235,7 +235,7 @@ def customer_new_view(request):
 def firmware_list_view(request):
     firmwares = FirmwareVersion.objects.annotate(
         deployed_count=Count('updatetask')
-    ).order_by('-release_date')
+    ).order_by('-released_date')
     
     customers = Customer.objects.all()
     
