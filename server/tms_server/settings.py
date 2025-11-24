@@ -53,6 +53,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'terminals.middleware.AuditLoggingMiddleware',
+    'terminals.middleware.SecurityHeadersMiddleware',
 ]
 
 ROOT_URLCONF = 'tms_server.urls'

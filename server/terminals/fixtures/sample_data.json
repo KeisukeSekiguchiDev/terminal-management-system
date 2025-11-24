@@ -1,0 +1,127 @@
+[
+  {
+    "model": "terminals.customer",
+    "pk": 1,
+    "fields": {
+      "company_name": "ABC Mart",
+      "contact_person": "Ichiro Suzuki",
+      "contact_email": "suzuki@abc-mart.com",
+      "contact_phone": "03-1111-2222",
+      "contract_type": "premium",
+      "max_terminals": 100,
+      "is_active": true,
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "terminals.customer",
+    "pk": 2,
+    "fields": {
+      "company_name": "XYZ Store",
+      "contact_person": "Hanako Tanaka",
+      "contact_email": "tanaka@xyz-store.com",
+      "contact_phone": "03-2222-3333",
+      "contract_type": "standard",
+      "max_terminals": 50,
+      "is_active": true,
+      "created_at": "2025-01-15T00:00:00Z",
+      "updated_at": "2025-01-15T00:00:00Z"
+    }
+  },
+  {
+    "model": "terminals.terminal",
+    "pk": 1,
+    "fields": {
+      "serial_number": "TC-200-001",
+      "customer": 1,
+      "store_name": "Shibuya Store",
+      "store_address": "Tokyo, Shibuya-ku",
+      "status": "online",
+      "firmware_version": "1.0.0",
+      "agent_version": "1.0.0",
+      "last_heartbeat": "2025-11-24T08:00:00Z",
+      "cpu_usage": 45,
+      "memory_usage": 60,
+      "disk_usage": 30,
+      "temperature": 45,
+      "ip_address": "192.168.1.100",
+      "created_at": "2025-01-10T00:00:00Z",
+      "updated_at": "2025-11-24T08:00:00Z"
+    }
+  },
+  {
+    "model": "terminals.terminal",
+    "pk": 2,
+    "fields": {
+      "serial_number": "TC-200-002",
+      "customer": 1,
+      "store_name": "Shinjuku Store",
+      "store_address": "Tokyo, Shinjuku-ku",
+      "status": "online",
+      "firmware_version": "1.0.0",
+      "agent_version": "1.0.0",
+      "last_heartbeat": "2025-11-24T08:00:00Z",
+      "cpu_usage": 50,
+      "memory_usage": 55,
+      "disk_usage": 35,
+      "temperature": 43,
+      "ip_address": "192.168.1.101",
+      "created_at": "2025-01-10T00:00:00Z",
+      "updated_at": "2025-11-24T08:00:00Z"
+    }
+  },
+  {
+    "model": "terminals.terminal",
+    "pk": 3,
+    "fields": {
+      "serial_number": "TC-200-003",
+      "customer": 2,
+      "store_name": "Ikebukuro Store",
+      "store_address": "Tokyo, Toshima-ku",
+      "status": "offline",
+      "firmware_version": "1.0.0",
+      "agent_version": "1.0.0",
+      "last_heartbeat": "2025-11-24T06:00:00Z",
+      "cpu_usage": 0,
+      "memory_usage": 0,
+      "disk_usage": 0,
+      "temperature": 0,
+      "ip_address": "192.168.1.102",
+      "created_at": "2025-01-20T00:00:00Z",
+      "updated_at": "2025-11-24T06:00:00Z"
+    }
+  },
+  {
+    "model": "terminals.firmwareversion",
+    "pk": 1,
+    "fields": {
+      "version": "1.0.0",
+      "model": "TC-200",
+      "file_path": "firmware/tc200_v1.0.0.bin",
+      "file_size": 5242880,
+      "file_hash": "abc123def456",
+      "release_date": "2025-01-01",
+      "release_notes": "Initial release",
+      "is_active": true,
+      "is_latest": false,
+      "created_at": "2025-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "terminals.firmwareversion",
+    "pk": 2,
+    "fields": {
+      "version": "1.1.0",
+      "model": "TC-200",
+      "file_path": "firmware/tc200_v1.1.0.bin",
+      "file_size": 5300000,
+      "file_hash": "def456ghi789",
+      "release_date": "2025-06-01",
+      "release_notes": "Bug fixes and performance improvements",
+      "is_active": true,
+      "is_latest": true,
+      "created_at": "2025-06-01T00:00:00Z"
+    }
+  }
+]
