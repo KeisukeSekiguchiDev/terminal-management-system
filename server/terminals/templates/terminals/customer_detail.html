@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ customer.company_name }} - TMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Customer Details: {{ customer.company_name }}</h2>
+    <div>
+        <a href="{% url 'customer_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Basic Information</div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th width="200">Company Name</th>
+                        <td>{{ customer.company_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Contact Email</th>
+                        <td>{{ customer.contact_email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Contact Phone</th>
+                        <td>{{ customer.contact_phone|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Contract Type</th>
+                        <td>
+                            <span class="badge bg-{% if customer.contract_type == 'premium' %}success{% elif customer.contract_type == 'standard' %}primary{% else %}secondary{% endif %}">
+                                {{ customer.get_contract_type_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Max Terminals</th>
+                        <td>{{ customer.max_terminals }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>
+                            {% if customer.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created At</th>
+                        <td>{{ customer.created_at }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Statistics</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6 mb-3">
+                        <h3 class="text-primary">{{ terminal_stats.total }}</h3>
+                        <p class="text-muted mb-0">Total Terminals</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h3 class="text-success">{{ terminal_stats.online }}</h3>
+                        <p class="text-muted mb-0">Online</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="text-warning">{{ terminal_stats.offline }}</h3>
+                        <p class="text-muted mb-0">Offline</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="text-danger">{{ terminal_stats.error }}</h3>
+                        <p class="text-muted mb-0">Error</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Terminals</span>
+        <a href="{% url 'terminal_list' %}?customer_id={{ customer.id }}" class="btn btn-sm btn-outline-primary">
+            View All
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Serial Number</th>
+                    <th>Store Name</th>
+                    <th>Status</th>
+                    <th>Last Communication</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for terminal in terminals %}
+                <tr>
+                    <td>
+                        <a href="{% url 'terminal_detail' terminal.id %}">
+                            {{ terminal.serial_number }}
+                        </a>
+                    </td>
+                    <td>{{ terminal.store_name }}</td>
+                    <td>
+                        {% if terminal.status == 'online' %}
+                            <span class="badge bg-success">Online</span>
+                        {% elif terminal.status == 'offline' %}
+                            <span class="badge bg-warning">Offline</span>
+                        {% else %}
+                            <span class="badge bg-danger">Error</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if terminal.last_heartbeat %}
+                            {{ terminal.last_heartbeat|timesince }} ago
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'terminal_detail' terminal.id %}" class="btn btn-sm btn-outline-primary">
+                            Details
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No terminals registered</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
